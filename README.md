@@ -1,2 +1,4 @@
-# jeplayer_examples
-Examples using JEPLayer ORM
+JEPLayer Examples
+========
+Java Examples using [JEPLayer ORM](https://github.com/jmarranz/jeplayer)
+
