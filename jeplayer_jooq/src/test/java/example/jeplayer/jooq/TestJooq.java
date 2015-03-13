@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package example.jeplayer.jooq;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -12,13 +7,10 @@ import example.jeplayer.jooq.model.Contact;
 import java.beans.PropertyVetoException;
 import java.sql.SQLException;
 import java.util.List;
-import javax.sql.DataSource;
 import jepl.JEPLBootRoot;
 import jepl.JEPLConnection;
 import jepl.JEPLConnectionListener;
 import jepl.JEPLDAL;
-import jepl.JEPLDAO;
-import jepl.JEPLDataSource;
 import jepl.JEPLNonJTADataSource;
 import jepl.JEPLResultSetDAO;
 import jepl.JEPLTask;
@@ -38,10 +30,11 @@ import org.junit.Test;
  */
 public class TestJooq
 {
-    
     public TestJooq()
     {
     }
+    
+    // Here the test setup stuff...
     
     @BeforeClass
     public static void setUpClass()
@@ -62,15 +55,9 @@ public class TestJooq
     public void tearDown()
     {
     }
-
-
+        
     @Test
     public void jooqExample() throws Exception
-    {
-        exec();
-    }
-        
-    private static void exec() throws Exception
     {
         ComboPooledDataSource ds = new ComboPooledDataSource();        
         try
@@ -170,13 +157,13 @@ public class TestJooq
                 System.out.println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone());
             });             
             
-            jdbcTxnExample(dao,new Contact[]{contact1,contact2});            
+            jdbcTxnExample(dao);            
          
-            jdbcTxnExample2(dao,new Contact[]{contact1,contact2});             
+            jdbcTxnExample2(dao);             
             
-            jdbcTxnExample3(dao,new Contact[]{contact1,contact2}); 
+            jdbcTxnExample3(dao); 
             
-            jdbcTxnExample4(dao,new Contact[]{contact1,contact2});            
+            jdbcTxnExample4(dao);            
             
             jdbcTxnExample5(dao,true);
             
@@ -247,13 +234,17 @@ public class TestJooq
         ).executeUpdate(); 
     }
            
-    private static void jdbcTxnExample(ContactDAO dao,Contact[] contacts)
+    private static void jdbcTxnExample(ContactDAO dao)
     {
         checkNotEmpty(dao);      
         
+        List<Contact> contacts = dao.selectNotActiveResult();        
+        
         JEPLTask<Void> task = () -> { // Void exec() throws Exception
-            for(Contact contact : contacts) 
-                dao.delete(contact);            
+            contacts.stream().forEach((contact) ->
+            {            
+                dao.delete(contact);
+            });
             // No, no, we need a rollback
             throw new Exception("I want a rollback to avoid to delete rows");
         };
@@ -273,13 +264,17 @@ public class TestJooq
         }
     }            
     
-    private static void jdbcTxnExample2(ContactDAO dao,Contact[] contacts)
+    private static void jdbcTxnExample2(ContactDAO dao)
     {
         checkNotEmpty(dao);      
         
+        List<Contact> contacts = dao.selectNotActiveResult();        
+        
         JEPLTask<Void> task = () -> { // Void exec() throws Exception
-            for(Contact contact : contacts) 
-                dao.delete(contact);              
+            contacts.stream().forEach((contact) ->
+            {            
+                dao.delete(contact);
+            });
             // No, no, we need a rollback
             throw new Exception("I want a rollback to avoid to delete rows");
         };
@@ -301,14 +296,17 @@ public class TestJooq
         }
     }            
     
-    private static void jdbcTxnExample3(ContactDAO dao,Contact[] contacts)
+    private static void jdbcTxnExample3(ContactDAO dao)
     {
         checkNotEmpty(dao);      
         
+        List<Contact> contacts = dao.selectNotActiveResult();
+        
         JEPLTask<Void> task = () -> { // Void exec() throws Exception
-
-            for(Contact contact : contacts) 
+            contacts.stream().forEach((contact) ->
+            {
                 dao.delete(contact);            
+            });
             // No, no, we need a rollback
             throw new Exception("I want a rollback to avoid to delete rows");
         };
@@ -342,13 +340,17 @@ public class TestJooq
     }
        
     
-    private static void jdbcTxnExample4(ContactDAO dao,Contact[] contacts)
+    private static void jdbcTxnExample4(ContactDAO dao)
     {
         checkNotEmpty(dao);      
         
+        List<Contact> contacts = dao.selectNotActiveResult();
+        
         JEPLTask<Void> task = () -> { // Void exec() throws Exception
-            for(Contact contact : contacts) 
+            contacts.stream().forEach((contact) ->
+            {
                 dao.delete(contact);            
+            });
             // No, no, we need a rollback
             throw new Exception("I want a rollback to avoid to delete rows");
         };
@@ -429,16 +431,14 @@ public class TestJooq
     }    
     
     private static void checkEmpty(ContactDAO dao)
-    {
-        int size2 = dao.selectCount();             
-        if (size2 != 0)
+    {            
+        if (dao.selectCount() != 0)
             throw new RuntimeException("Unexpected");            
     }
     
     private static void checkNotEmpty(ContactDAO dao)
-    {
-        int size = dao.selectCount();             
-        if (size == 0)
+    {            
+        if (dao.selectCount() == 0)
             throw new RuntimeException("Unexpected");            
     }    
 }

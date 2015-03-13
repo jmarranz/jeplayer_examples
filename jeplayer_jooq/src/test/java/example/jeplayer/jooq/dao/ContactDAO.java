@@ -23,7 +23,7 @@ import org.jooq.impl.DefaultDSLContext;
 /**
  *  https://groups.google.com/forum/#!topic/jooq-user/2HTS-0DE1M8
  * 
- *  Because we're using JOOQ binding params by name (provided by JEPLayer) is not used in this example
+ *  Because we're using JOOQ, binding params by name (provided by JEPLayer) are not used in this example
  * 
  * @author jmarranz
  */
@@ -117,7 +117,7 @@ public class ContactDAO
             public <U> U getValue(int columnIndex, Class<U> returnType, JEPLResultSet jrs) throws Exception
             {
                 if (!returnType.equals(int.class)) throw new RuntimeException("UNEXPECTED");
-                // Expected columnIndex = 1
+                // Expected columnIndex = 1 (only one row and one column is expected)
                 ResultSet rs = jrs.getResultSet();
                 int resInt = rs.getInt(columnIndex);
                 Object resObj = rs.getObject(columnIndex);
@@ -195,8 +195,8 @@ public class ContactDAO
     
     public List<Contact> selectNotActiveResult(int maxResults)
     {
-        // "ORDER BY ID" is not really needed, is just to play with jooq
-        List<Contact> list = dao.createJEPLDAOQuery( jooqCtx.selectFrom(table("CONTACT")).orderBy(field("ID")).getSQL() ) // "SELECT * FROM CONTACT ORDER BY ID"
+        // "ORDER BY" is not really needed, is just to play with jooq
+        List<Contact> list = dao.createJEPLDAOQuery( jooqCtx.selectFrom(table("CONTACT")).orderBy(field("ID"),field("NAME")).getSQL() ) // "SELECT * FROM CONTACT ORDER BY ID,NAME"
                 .setMaxResults(maxResults)
                 .getResultList();       
         return list;
