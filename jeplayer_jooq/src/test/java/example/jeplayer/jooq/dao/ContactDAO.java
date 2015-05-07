@@ -4,17 +4,24 @@ import example.jeplayer.jooq.model.Contact;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
+import jepl.JEPLColumnDesc;
+import jepl.JEPLConnection;
 import jepl.JEPLDAO;
 import jepl.JEPLNonJTADataSource;
+import jepl.JEPLPersistAction;
 import jepl.JEPLPreparedStatement;
 import jepl.JEPLPreparedStatementListener;
 import jepl.JEPLResultSet;
 import jepl.JEPLResultSetDALListener;
 import jepl.JEPLResultSetDAO;
+import jepl.JEPLResultSetDAOBeanMapper;
 import jepl.JEPLResultSetDAOListener;
-import jepl.JEPLRowBeanMapper;
 import jepl.JEPLTask;
+import jepl.JEPLUpdateDAOBeanMapper;
+import jepl.JEPLUpdateDAOListener;
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.table;
@@ -31,7 +38,8 @@ public class ContactDAO
 {
     protected JEPLDAO<Contact> dao;
     protected DefaultDSLContext jooqCtx;
-    protected JEPLResultSetDAOListener<Contact> resultSetListener; // Saved in this example because is used to show other functionalities
+    protected JEPLUpdateDAOListener<Contact> updateListener;    
+    protected JEPLResultSetDAOListener<Contact> resultSetListener; 
     
     public ContactDAO(JEPLNonJTADataSource jds,DefaultDSLContext jooqCtx)
     {
@@ -43,15 +51,36 @@ public class ContactDAO
         this.dao = jds.createJEPLDAO(Contact.class); 
         this.jooqCtx = jooqCtx;
         
-        // This 3 mapping approaches provides the same behaviour in this simple example, they are coded just to show 
-        // the different options for mapping         
+        // This 3 mapping approaches provides the same behaviour in this simple example, they are coded 
+        // just to show the different options for mapping         
         switch(mappingMode)
         {
-            case 0: // mapping attribs and columns by name ignoring case
-                resultSetListener = jds.createJEPLResultSetDAOListenerDefault(Contact.class); 
+            case 0: // default mapping attribs and columns by name ignoring case
+                this.updateListener = jds.createJEPLUpdateDAOListenerDefault(Contact.class);
+                this.resultSetListener = jds.createJEPLResultSetDAOListenerDefault(Contact.class); 
                 break;
-            case 1: // custom mapping (and object factory)
-                resultSetListener = new JEPLResultSetDAOListener<Contact>() {
+            case 1: // custom mapping 
+                this.updateListener = new JEPLUpdateDAOListener<Contact>() {
+                        @Override
+                        public String getTable(JEPLConnection jcon, Contact obj) throws Exception {
+                            return "CONTACT";
+                        }
+
+                        @Override
+                        public Map.Entry<JEPLColumnDesc, Object>[] getColumnDescAndValues(JEPLConnection jcon, Contact obj, JEPLPersistAction action) throws Exception 
+                        {
+                            Map.Entry<JEPLColumnDesc,Object>[] result = new AbstractMap.SimpleEntry[]
+                            {
+                                new AbstractMap.SimpleEntry<>(new JEPLColumnDesc("ID").setAutoIncrement(true).setPrimaryKey(true),obj.getId()),
+                                new AbstractMap.SimpleEntry<>(new JEPLColumnDesc("NAME"),obj.getName()),                    
+                                new AbstractMap.SimpleEntry<>(new JEPLColumnDesc("PHONE"),obj.getPhone()),                    
+                                new AbstractMap.SimpleEntry<>(new JEPLColumnDesc("EMAIL"),obj.getEmail())                    
+                            };
+                            return result;
+                        }            
+                    };                
+                
+                this.resultSetListener = new JEPLResultSetDAOListener<Contact>() {
                         @Override
                         public void setupJEPLResultSet(JEPLResultSet jrs,JEPLTask<?> task) throws Exception {
                         }
@@ -71,8 +100,17 @@ public class ContactDAO
                         }    
                     };
                 break;
-            case 2:  // Using a row-mapper (mapping is by name with some custom mapping using JEPLRowBeanMapper
-                JEPLRowBeanMapper<Contact> rowMapper = (Contact obj, JEPLResultSet jrs, int col, String columnName, Object value, Method setter) -> { // setColumnInBean(...)
+            case 2:  // default mapping using custom row-mappers              
+                JEPLUpdateDAOBeanMapper<Contact> updateMapper = (Contact obj, JEPLConnection jcon, String columnName, Method getter, JEPLPersistAction action) -> { // public Object getColumnFromBean(Contact obj, JEPLConnection jcon, String columnName, Method getter, JEPLPersistAction action) throws Exception
+                        if (columnName.equalsIgnoreCase("email"))
+                        {
+                            return obj.getEmail();
+                        }
+                        return JEPLUpdateDAOBeanMapper.NO_VALUE;
+                    };                                    
+                this.updateListener = jds.createJEPLUpdateDAOListenerDefault(Contact.class,updateMapper);
+                    
+                JEPLResultSetDAOBeanMapper<Contact> resultMapper = (Contact obj, JEPLResultSet jrs, int col, String columnName, Object value, Method setter) -> { // setColumnInBean(...)
                         if (columnName.equalsIgnoreCase("email"))
                         {
                             obj.setEmail((String)value);
@@ -80,12 +118,13 @@ public class ContactDAO
                         }
                         return false;
                     };
-                resultSetListener = jds.createJEPLResultSetDAOListenerDefault(Contact.class,rowMapper);                
+                this.resultSetListener = jds.createJEPLResultSetDAOListenerDefault(Contact.class,resultMapper);                
                 break;
             case 3:
                 throw new RuntimeException("Unexpected");
         }
-                
+          
+        dao.addJEPLListener(updateListener);        
         dao.addJEPLListener(resultSetListener);          
     }    
     
@@ -103,6 +142,12 @@ public class ContactDAO
                 .getGeneratedKey(int.class);
         contact.setId(key);
     }     
+    
+    public void insertImplicitUpdateListener(Contact contact)
+    {
+        int key = dao.insert(contact).getGeneratedKey(int.class);
+        contact.setId(key);
+    }        
     
     public void insertExplicitResultSetListener(Contact contact)
     {
@@ -136,7 +181,7 @@ public class ContactDAO
          contact.setId(key);
     }    
     
-    public void update(Contact contact)
+    public boolean update(Contact contact)
     {
         int updated = dao.createJEPLDALQuery(
                 jooqCtx.update(table("CONTACT"))
@@ -146,9 +191,15 @@ public class ContactDAO
                         .where(field("ID").equal(0)).getSQL()) // "UPDATE CONTACT SET EMAIL = ?, NAME = ?, PHONE = ? WHERE ID = ?")
                 .addParameters(contact.getEmail(),contact.getName(),contact.getPhone(),contact.getId())
                 .executeUpdate();
-        if (updated != 1)
-            throw new RuntimeException("Unexpected");
+        return updated > 0;
     }    
+    
+    public boolean updateImplicitUpdateListener(Contact contact)
+    {
+        int updated = dao.update(contact)
+                .executeUpdate();
+        return updated > 0;
+    }        
     
     public boolean delete(Contact contact)
     {
@@ -159,6 +210,13 @@ public class ContactDAO
     {
         int deleted = dao.createJEPLDALQuery( jooqCtx.delete(table("CONTACT")).where(field("ID").equal(0)).getSQL() ) // "DELETE FROM CONTACT WHERE ID = ?" 
                         .addParameters(id)             
+                        .executeUpdate();     
+        return deleted > 0;
+    }    
+    
+    public boolean deleteImplicitUpdateListener(Contact contact)
+    {
+        int deleted = dao.delete( contact )       
                         .executeUpdate();     
         return deleted > 0;
     }    
@@ -220,7 +278,7 @@ public class ContactDAO
             }            
         };
 
-        return dao.createJEPLDAOQuery("SELECT * FROM CONTACT")
+        return dao.createJEPLDAOQuery(jooqCtx.selectFrom(table("CONTACT")).getSQL())
                 .addJEPLListener(listener)
                 .getResultList();
     }    
