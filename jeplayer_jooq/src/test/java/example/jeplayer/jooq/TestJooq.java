@@ -267,9 +267,9 @@ public class TestJooq
         // Supposed 3 rows in contact table
         JEPLTask<Void> task = () -> { // public Void exec() throws Exception
             JEPLResultSet resSet = dal.createJEPLDALQuery(
-                    jooqCtx.select(count().as("CO"),avg((Field)field("ID")).as("AV")).from(table("CONTACT")).getSQL()) // SELECT COUNT(*) AS CO,AVG(ID) AS AV FROM CONTACT  
+                    jooqCtx.select(count().as("CO"),avg(field("ID",int.class)).as("AV")).from(table("CONTACT")).getSQL()) // SELECT COUNT(*) AS CO,AVG(ID) AS AV FROM CONTACT  
                     .getJEPLResultSet();
-
+          
             assertFalse(resSet.isClosed());                
 
             ResultSet rs = resSet.getResultSet();
