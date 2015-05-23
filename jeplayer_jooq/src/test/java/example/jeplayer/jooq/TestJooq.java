@@ -20,7 +20,6 @@ import jepl.JEPLResultSetDAO;
 import jepl.JEPLTask;
 import jepl.JEPLTransaction;
 import jepl.JEPLTransactionalNonJTA;
-import org.jooq.Field;
 import org.jooq.SQLDialect;
 import static org.jooq.impl.DSL.avg;
 import static org.jooq.impl.DSL.count;
@@ -122,7 +121,7 @@ public class TestJooq
             updated = dao.updateImplicitUpdateListener(contact3); // just to play
             assertTrue(updated);          
             
-            JEPLTask<Contact[]> task = () ->
+            JEPLTask<Contact[]> task = () -> // public Contact[] exec() throws Exception
             { // Connection got
                 JEPLResultSetDAO<Contact> list = dao.selectActiveResult();
                 assertFalse(list.isClosed());                
