@@ -67,10 +67,10 @@ class ContactDAO
                     getColumnDescAndValues : { JEPLConnection jcon, Contact obj, JEPLPersistAction action ->
                             Map.Entry[] result = 
                             [
-                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("ID").setAutoIncrement(true).setPrimaryKey(true),obj.getId()),
-                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("NAME"),obj.getName()),                    
-                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("PHONE"),obj.getPhone()),                    
-                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("EMAIL"),obj.getEmail())                    
+                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("ID").setAutoIncrement(true).setPrimaryKey(true),obj.id),
+                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("NAME"),obj.name),                    
+                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("PHONE"),obj.phone),                    
+                                new AbstractMap.SimpleEntry(new JEPLColumnDesc("EMAIL"),obj.email)                    
                             ]
                             return result                        
                     }
@@ -85,10 +85,10 @@ class ContactDAO
                     },
                     fillObject : { Contact obj,JEPLResultSet jrs ->
                         def rs = jrs.getResultSet()
-                        obj.setId(rs.getInt("ID"))
-                        obj.setName(rs.getString("NAME"))
-                        obj.setPhone(rs.getString("PHONE"))
-                        obj.setEmail(rs.getString("EMAIL"))                        
+                        obj.id = rs.getInt("ID")
+                        obj.name = rs.getString("NAME")
+                        obj.phone = rs.getString("PHONE")
+                        obj.email = rs.getString("EMAIL")
                     }
                 ] as JEPLResultSetDAOListener<Contact>
 
@@ -97,7 +97,7 @@ class ContactDAO
                 def updateMapper = { Contact obj, JEPLConnection jcon, String columnName, Method getter, JEPLPersistAction action ->
                         if (columnName.equalsIgnoreCase("email"))
                         {
-                            return obj.getEmail()
+                            return obj.email
                         }
                         return JEPLUpdateDAOBeanMapper.NO_VALUE                    
                 } as JEPLUpdateDAOBeanMapper<Contact> // Object getColumnFromBean(Contact obj, JEPLConnection jcon, String columnName, Method getter, JEPLPersistAction action) throws Exception
@@ -107,7 +107,7 @@ class ContactDAO
                 def resultMapper = { Contact obj,JEPLResultSet jrs,int col,String columnName,Object value,Method setter ->
                         if (columnName.equalsIgnoreCase("email"))
                         {
-                            obj.setEmail((String)value)
+                            obj.email = (String)value
                             return true
                         }
                         return false                    
@@ -133,15 +133,15 @@ class ContactDAO
         def key = dao.createJEPLDALQuery(
                  jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
                          .values("email","name", "phone").getSQL()) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)
-                .addParameters(contact.getEmail(),contact.getName(),contact.getPhone())
+                .addParameters(contact.email,contact.name,contact.phone)
                 .getGeneratedKey(int.class)
-        contact.setId(key)
+        contact.id = key
     }     
     
     def insertImplicitUpdateListener(contact)
     {
         def key = dao.insert(contact).getGeneratedKey(int.class)
-        contact.setId(key)
+        contact.id = key
     }        
     
     def insertExplicitResultSetListener(contact)
@@ -167,10 +167,10 @@ class ContactDAO
         def key = dao.createJEPLDALQuery(
                     jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
                             .values("email","name", "phone").getSQL()) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)                
-                    .addParameters(contact.getEmail(),contact.getName(),contact.getPhone())
+                    .addParameters(contact.email,contact.name,contact.phone)
                     .addJEPLListener(listener)
                     .getGeneratedKey(int.class)
-         contact.setId(key)
+         contact.id = key
     }    
     
     def update(contact)
@@ -181,7 +181,7 @@ class ContactDAO
                         .set(field("NAME"),  "name")
                         .set(field("PHONE"), "phone")
                         .where(field("ID").equal(0)).getSQL()) // "UPDATE CONTACT SET EMAIL = ?, NAME = ?, PHONE = ? WHERE ID = ?")
-                .addParameters(contact.getEmail(),contact.getName(),contact.getPhone(),contact.getId())
+                .addParameters(contact.email,contact.name,contact.phone,contact.id)
                 .executeUpdate()
         return updated > 0
     }    
@@ -194,7 +194,7 @@ class ContactDAO
     
     def delete(contact)
     {
-        return deleteById(contact.getId())
+        return deleteById(contact.id)
     }
     
     def deleteById(id)

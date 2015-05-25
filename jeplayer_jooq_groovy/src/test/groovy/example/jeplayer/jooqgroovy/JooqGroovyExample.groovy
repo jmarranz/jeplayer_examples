@@ -69,28 +69,28 @@ class JooqGroovyExample
             def dao = new ContactDAO(jds,jooqCtx,mappingMode)
           
             def contact1 = new Contact()
-            contact1.setName("One Contact")
-            contact1.setPhone("1111111")
-            contact1.setEmail("contactOne@world.com")
+            contact1.name = "One Contact"
+            contact1.phone = "1111111"
+            contact1.email = "contactOne@world.com"
             dao.insert(contact1)
             
             def contact2 = new Contact()            
-            contact2.setName("Another Contact")
-            contact2.setPhone("2222222")
-            contact2.setEmail("contactAnother@world.com")            
+            contact2.name = "Another Contact"
+            contact2.phone = "2222222"
+            contact2.email = "contactAnother@world.com"
             dao.insertImplicitUpdateListener(contact2)  // just to play  
             
             def contact3 = new Contact()            
-            contact3.setName("And other Contact")
-            contact3.setPhone("3333333")
-            contact3.setEmail("contactAndOther@world.com")            
+            contact3.name = "And other Contact"
+            contact3.phone = "3333333"
+            contact3.email = "contactAndOther@world.com"
             dao.insertExplicitResultSetListener(contact3) // just to play           
                         
-            contact3.setPhone("4444444")            
+            contact3.phone = "4444444"
             def updated = dao.update(contact3)
             assertTrue(updated)            
             
-            contact3.setPhone("3333333")            
+            contact3.phone = "3333333"
             updated = dao.updateImplicitUpdateListener(contact3) // just to play
             assertTrue(updated)          
             
@@ -109,23 +109,23 @@ class JooqGroovyExample
 
             def array = dao.getJEPLDAO().getJEPLDataSource().exec(task) // Contact[]                                   
             println("Result:")
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
             
             def list = dao.selectNotActiveResult()  // List<Contact>          
             println("Result:")
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
             
             def maxResults = 2
             list = dao.selectNotActiveResult(maxResults)
             assertTrue(list.size() == maxResults)
             
             println("Result maxResults (" + maxResults + "):")
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
             
             list = dao.selectNotActiveResult2(maxResults)
             assertTrue(list.size() == maxResults)              
             println("Result maxResults (" + maxResults + "):")            
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )    
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )    
                        
             
             def from = 1
@@ -133,12 +133,12 @@ class JooqGroovyExample
             list = dao.selectRange(from,to)
             assertTrue(list.size() == (to - from))            
             println("Result from/to " + from + "/" + to + ":")
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
                                
             list = dao.selectRange2(from,to)
             assertTrue(list.size() == (to - from))             
             println("Result from/to " + from + "/" + to + ":")
-            array.each( { contact -> println("  Contact: " + contact.getId() + " " + contact.getName() + " " + contact.getPhone()) } )
+            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
   
             
             def dal = jds.createJEPLDAL()
