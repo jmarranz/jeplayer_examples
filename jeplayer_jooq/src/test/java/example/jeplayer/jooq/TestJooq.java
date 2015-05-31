@@ -213,7 +213,7 @@ public class TestJooq
     {
         // Create before a database named "testjooq"
         String jdbcXADriver = "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource";
-        String jdbcURL="jdbc:mysql://127.0.0.1:3306/testjooq?pinGlobalTxToPhysicalConnection=true"; // testjooq
+        String jdbcURL="jdbc:mysql://127.0.0.1:3306/testjeplayer?pinGlobalTxToPhysicalConnection=true"; // testjooq
         String jdbcUserName="root";
         String jdbcPassword="root2000";        
         int poolSize = 3;

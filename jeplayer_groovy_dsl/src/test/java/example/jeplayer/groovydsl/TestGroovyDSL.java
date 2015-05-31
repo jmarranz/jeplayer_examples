@@ -1,4 +1,4 @@
-package example.jeplayer.jooqgroovy;
+package example.jeplayer.groovydsl;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyObject;
@@ -13,9 +13,9 @@ import org.junit.Test;
  *
  * @author jmarranz
  */
-public class TestJooqGroovy
+public class TestGroovyDSL
 {
-    public TestJooqGroovy()
+    public TestGroovyDSL()
     {
     }
     
@@ -42,13 +42,13 @@ public class TestJooqGroovy
     }
         
     @Test
-    public void jooqGroovyExample() throws Exception
+    public void groovyDSLExample() throws Exception
     {          
         String basePath = "src/test/groovy";
         ClassLoader parent = getClass().getClassLoader();
         GroovyClassLoader loader = new GroovyClassLoader(parent);
         loader.addClasspath(basePath);
-        Class groovyClass = loader.parseClass(new File(basePath + "/example/jeplayer/jooqgroovy/JooqGroovyExample.groovy"));
+        Class groovyClass = loader.parseClass(new File(basePath + "/example/jeplayer/groovydsl/GroovyDSLExample.groovy"));
 
         // let's call some method on an instance
         GroovyObject groovyObject = (GroovyObject) groovyClass.newInstance();

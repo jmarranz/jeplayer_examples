@@ -1,6 +1,6 @@
-package example.jeplayer.jooqgroovy.dao
+package example.jeplayer.groovyjooq.dao
 
-import example.jeplayer.jooqgroovy.model.Contact
+import example.jeplayer.groovyjooq.model.Contact
 import java.lang.reflect.Method
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -79,10 +79,8 @@ class ContactDAO
 
                 this.resultSetListener = 
                 [
-                    setupJEPLResultSet : { JEPLResultSet jrs,JEPLTask<?> task ->                        
-                    },
-                    createObject : { JEPLResultSet jrs -> new Contact()                        
-                    },
+                    setupJEPLResultSet : { JEPLResultSet jrs,JEPLTask<?> task ->  },
+                    createObject : { JEPLResultSet jrs -> new Contact() },
                     fillObject : { Contact obj,JEPLResultSet jrs ->
                         def rs = jrs.getResultSet()
                         obj.id = rs.getInt("ID")
@@ -95,8 +93,7 @@ class ContactDAO
                 break
             case 2:  // default mapping using custom row-mappers              
                 def updateMapper = { Contact obj, JEPLConnection jcon, String columnName, Method getter, JEPLPersistAction action ->
-                        if (columnName.equalsIgnoreCase("email"))
-                        {
+                        if (columnName.equalsIgnoreCase("email")) {
                             return obj.email
                         }
                         return JEPLUpdateDAOBeanMapper.NO_VALUE                    
@@ -105,12 +102,11 @@ class ContactDAO
                 this.updateListener = jds.createJEPLUpdateDAOListenerDefault(Contact.class,updateMapper)
                     
                 def resultMapper = { Contact obj,JEPLResultSet jrs,int col,String columnName,Object value,Method setter ->
-                        if (columnName.equalsIgnoreCase("email"))
-                        {
+                        if (columnName.equalsIgnoreCase("email")) {
                             obj.email = (String)value
                             return true
                         }
-                        return false                    
+                        return false   
                 } as JEPLResultSetDAOBeanMapper<Contact> // boolean setColumnInBean(Contact obj,JEPLResultSet jrs,int col,String columnName,Object value,Method setter)
                 
                 this.resultSetListener = jds.createJEPLResultSetDAOListenerDefault(Contact.class,resultMapper)                
@@ -119,8 +115,8 @@ class ContactDAO
                 throw new RuntimeException("Unexpected")
         }
           
-        dao.addJEPLListener(updateListener)        
-        dao.addJEPLListener(resultSetListener)          
+        dao.addJEPLListener updateListener        
+        dao.addJEPLListener resultSetListener
     }    
     
     def getJEPLDAO()
@@ -130,11 +126,10 @@ class ContactDAO
     
     def insert(contact)
     {
-        def key = dao.createJEPLDALQuery(
-                 jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
-                         .values("email","name", "phone").getSQL()) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)
-                .addParameters(contact.email,contact.name,contact.phone)
-                .getGeneratedKey(int.class)
+        def key = dao.createJEPLDALQuery( jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
+                                            .values("email","name","phone").getSQL() ) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)
+                    .addParameters( contact.email,contact.name,contact.phone )
+                    .getGeneratedKey(int.class)
         contact.id = key
     }     
     
@@ -164,12 +159,11 @@ class ContactDAO
                 }
             ] as JEPLResultSetDALListener
 
-        def key = dao.createJEPLDALQuery(
-                    jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
-                            .values("email","name", "phone").getSQL()) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)                
-                    .addParameters(contact.email,contact.name,contact.phone)
-                    .addJEPLListener(listener)
-                    .getGeneratedKey(int.class)
+        def key = dao.createJEPLDALQuery( jooqCtx.insertInto(table("CONTACT"),field("EMAIL"),field("NAME"),field("PHONE"))
+                                            .values("email","name", "phone").getSQL() ) // INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)                
+                        .addParameters( contact.email,contact.name,contact.phone )
+                        .addJEPLListener(listener)
+                        .getGeneratedKey(int.class)
          contact.id = key
     }    
     
@@ -177,11 +171,11 @@ class ContactDAO
     {
         def updated = dao.createJEPLDALQuery(
                 jooqCtx.update(table("CONTACT"))
-                        .set(field("EMAIL"), "email")
-                        .set(field("NAME"),  "name")
-                        .set(field("PHONE"), "phone")
-                        .where(field("ID").equal(0)).getSQL()) // "UPDATE CONTACT SET EMAIL = ?, NAME = ?, PHONE = ? WHERE ID = ?")
-                .addParameters(contact.email,contact.name,contact.phone,contact.id)
+                         .set(field("EMAIL"), "email")
+                         .set(field("NAME"),  "name")
+                         .set(field("PHONE"), "phone")
+                         .where(field("ID").equal(0)).getSQL()) // "UPDATE CONTACT SET EMAIL = ?, NAME = ?, PHONE = ? WHERE ID = ?")
+                .addParameters( contact.email,contact.name,contact.phone,contact.id )
                 .executeUpdate()
         return updated > 0
     }    
@@ -199,22 +193,21 @@ class ContactDAO
     
     def deleteById(id)
     {
-        def deleted = dao.createJEPLDALQuery( jooqCtx.delete(table("CONTACT")).where(field("ID").equal(0)).getSQL() ) // "DELETE FROM CONTACT WHERE ID = ?" 
-                        .addParameters(id)             
-                        .executeUpdate()     
+        def deleted = dao.createJEPLDALQuery jooqCtx.delete(table("CONTACT")).where(field("ID").equal(0)).getSQL()  // "DELETE FROM CONTACT WHERE ID = ?" 
+                            .addParameters( id )
+                            .executeUpdate()     
         return deleted > 0
     }    
     
     def deleteImplicitUpdateListener(contact)
     {
-        def deleted = dao.delete( contact ).executeUpdate()     
+        def deleted = dao.delete(contact).executeUpdate()
         return deleted > 0
     }    
     
     def deleteAll()
     {
-        return dao.createJEPLDALQuery( jooqCtx.delete(table("CONTACT")).getSQL() ) // "DELETE FROM CONTACT" 
-                            .executeUpdate()      
+        return dao.createJEPLDALQuery( jooqCtx.delete(table("CONTACT")).getSQL() ).executeUpdate()  // "DELETE FROM CONTACT"         
     }      
     
     def selectActiveResult() // JEPLResultSetDAO<Contact>

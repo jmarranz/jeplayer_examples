@@ -1,10 +1,10 @@
 
-package example.jeplayer.jooqgroovy
+package example.jeplayer.groovyjooq
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.mchange.v2.c3p0.DataSources
-import example.jeplayer.jooqgroovy.model.Contact
-import example.jeplayer.jooqgroovy.dao.ContactDAO
+import example.jeplayer.groovyjooq.model.Contact
+import example.jeplayer.groovyjooq.dao.ContactDAO
 import java.beans.PropertyVetoException
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
@@ -36,19 +36,18 @@ import static org.junit.Assert.assertTrue
  *
  * @author jmarranz
  */
-class JooqGroovyExample 
+class GroovyJooqExample 
 {
     def run() 
     {
-        for(short i = 0; i < 3; i++)
-        {
+        0..2.each({ i -> 
             println("Mapping mode:" + i)
-            runInternal(i)
-        }
+            runInternal((short)i)            
+            })
     }
     
      
-    def runInternal(mappingMode) 
+    def runInternal(short mappingMode) 
     {
         def ds = new ComboPooledDataSource()      
         try
@@ -65,9 +64,10 @@ class JooqGroovyExample
             jds.addJEPLListener(conListener) // Simple alternative:  jds.setDefaultAutoCommit(true)
             
             createTables(jds)
-                       
+                        
+            
             def dao = new ContactDAO(jds,jooqCtx,mappingMode)
-          
+            
             def contact1 = new Contact()
             contact1.name = "One Contact"
             contact1.phone = "1111111"
@@ -171,7 +171,7 @@ class JooqGroovyExample
     {
         // Create before a database named "testjooq"
         def jdbcXADriver = "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource"
-        def jdbcURL="jdbc:mysql://127.0.0.1:3306/testjooq?pinGlobalTxToPhysicalConnection=true" // testjooq
+        def jdbcURL="jdbc:mysql://127.0.0.1:3306/testjeplayer?pinGlobalTxToPhysicalConnection=true" // testjooq
         def jdbcUserName="root"
         def jdbcPassword="root2000"        
         def poolSize = 3

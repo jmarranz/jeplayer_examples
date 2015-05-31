@@ -1,5 +1,5 @@
 
-package example.jeplayer.jooqgroovy.model
+package example.jeplayer.groovyjooq.model
 
 class Contact
 {
@@ -8,8 +8,11 @@ class Contact
     String phone
     String email
     String notPersisAttr
-        
+    
+
+    
     def Contact()
     {
+        
     }
 }
