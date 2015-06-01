@@ -3,6 +3,7 @@ package example.jeplayer.groovydsl
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.mchange.v2.c3p0.DataSources
+import example.jeplayer.groovydsl.dao.ContactDAO
 import example.jeplayer.groovydsl.model.Contact
 
 import java.beans.PropertyVetoException
@@ -23,8 +24,7 @@ import jepl.JEPLTransaction
 import jepl.JEPLTransactionalNonJTA
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
-import example.jeplayer.groovydsl.dsl.DSLTest
-//import example.jeplayer.groovydsl.dsl.DSLDAL
+
 
 /**
  *
@@ -57,12 +57,23 @@ class GroovyDSLExample
             
             createTables(jds)
                 
+            def dao = new ContactDAO(jds,mappingMode)
+            
             def contact1 = new Contact()
             contact1.name = "One Contact"
             contact1.phone = "1111111"
             contact1.email = "contactOne@world.com"            
-            DSLTest.exec(jds,contact1)
-      
+            dao.insert(contact1)
+            
+            
+            def contact2 = new Contact()            
+            contact2.name = "Another Contact"
+            contact2.phone = "2222222"
+            contact2.email = "contactAnother@world.com"
+            dao.insertImplicitUpdateListener(contact2)  // just to play            
+            
+            
+
             
         }  
         finally

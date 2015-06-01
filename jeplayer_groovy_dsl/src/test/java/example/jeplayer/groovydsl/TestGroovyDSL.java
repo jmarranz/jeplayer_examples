@@ -44,11 +44,14 @@ public class TestGroovyDSL
     @Test
     public void groovyDSLExample() throws Exception
     {          
-        String basePath = "src/test/groovy";
+        String basePathMain = "src/main/groovy";        
+        String basePathTest = "src/test/groovy";        
+        
         ClassLoader parent = getClass().getClassLoader();
         GroovyClassLoader loader = new GroovyClassLoader(parent);
-        loader.addClasspath(basePath);
-        Class groovyClass = loader.parseClass(new File(basePath + "/example/jeplayer/groovydsl/GroovyDSLExample.groovy"));
+        loader.addClasspath(basePathMain);        
+        loader.addClasspath(basePathTest);
+        Class groovyClass = loader.parseClass(new File(basePathTest + "/example/jeplayer/groovydsl/GroovyDSLExample.groovy"));
 
         // let's call some method on an instance
         GroovyObject groovyObject = (GroovyObject) groovyClass.newInstance();

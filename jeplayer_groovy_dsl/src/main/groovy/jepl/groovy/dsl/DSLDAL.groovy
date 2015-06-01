@@ -1,31 +1,22 @@
 
-package example.jeplayer.groovydsl.dsl
+package jepl.groovy.dsl
 
 import jepl.JEPLDAL
 import jepl.JEPLDALQuery
+import jepl.impl.groovy.dsl.DSLDALQueryClosures
+import jepl.impl.groovy.dsl.DSLDALQueryResults
 
-public class DSLDAL
+class DSLDAL
 {
-    JEPLDAL dal;
+    JEPLDAL dal
     
-    private class DSLDALQueryClosures
+    def DSLDAL(JEPLDAL dal)
     {
-        Closure code
-        Closure params
-        Closure generatedKey
-        Closure executeUpdate        
+        this.dal = dal
     }
-    
-    private class DSLDALQueryResults
+
+    def protected DSLDALQueryResults callQueryResults(Closure c)
     {
-        String code = ""
-        Object[] params = null
-        Class generatedKeyClass = null
-        boolean executeUpdate = false        
-    }    
-    
-    def query(Closure c)
-    {       
         DSLDALQueryResults results = new DSLDALQueryResults()      
         
         Closure codeMethod = { String code -> results.code = code }
@@ -33,23 +24,26 @@ public class DSLDAL
         Closure generatedKeyMethod = { Class generatedKeyClass -> results.generatedKeyClass = generatedKeyClass }
         Closure executeUpdateMethod = { results.executeUpdate = true }        
         
-        DSLDALQueryClosures closures = new DSLDALQueryClosures(
+        DSLDALQueryClosures closures = new DSLDALQueryClosures( 
             code: codeMethod, params: paramsMethod, generatedKey : generatedKeyMethod, executeUpdate : executeUpdateMethod 
         )
-
+       
         /*
         closures.code = codeMethod   //closures.setProperty("code",codeMethod)
         closures.params = paramsMethod
         closures.generatedKey = generatedKeyMethod
         closures.executeUpdate = executeUpdateMethod
-        */
+        */        
         
         c.delegate = closures
         
-        c.call()
-
-        JEPLDALQuery query = dal.createJEPLDALQuery( results.code )
+        c.call()    
         
+        return results
+    }
+
+    def protected Object queryInternal(JEPLDALQuery query,DSLDALQueryResults results)
+    {              
         if (results.params != null)
             query.addParameters( results.params )
         
@@ -66,7 +60,18 @@ public class DSLDAL
         {
             throw new RuntimeException("You must call generatedKey or executeUpdate");
         }
+    }        
+    
+    def Object query(Closure c)
+    {       
+        DSLDALQueryResults results = callQueryResults(c)
+
+        JEPLDALQuery query = dal.createJEPLDALQuery( results.code )
+        
+        return queryInternal(query,results)
     }
+    
+
 }
 
 
