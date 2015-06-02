@@ -113,19 +113,18 @@ class GroovyJooqExample
             
             def list = dao.selectNotActiveResult()  // List<Contact>          
             println("Result:")
-            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
+            list.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
             
             def maxResults = 2
             list = dao.selectNotActiveResult(maxResults)
-            assertTrue(list.size() == maxResults)
-            
+            assertTrue(list.size() == maxResults)            
             println("Result maxResults (" + maxResults + "):")
-            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
+            list.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
             
             list = dao.selectNotActiveResult2(maxResults)
             assertTrue(list.size() == maxResults)              
             println("Result maxResults (" + maxResults + "):")            
-            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )    
+            list.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )    
                        
             
             def from = 1
@@ -133,12 +132,12 @@ class GroovyJooqExample
             list = dao.selectRange(from,to)
             assertTrue(list.size() == (to - from))            
             println("Result from/to " + from + "/" + to + ":")
-            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
+            list.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
                                
             list = dao.selectRange2(from,to)
             assertTrue(list.size() == (to - from))             
             println("Result from/to " + from + "/" + to + ":")
-            array.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
+            list.each( { contact -> println("  Contact: " + contact.id + " " + contact.name + " " + contact.phone) } )
   
             
             def dal = jds.createJEPLDAL()

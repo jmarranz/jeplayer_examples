@@ -14,6 +14,10 @@ import jepl.JEPLTask
 import jepl.JEPLUpdateDAOBeanMapper
 import jepl.JEPLUpdateDAOListener
 import jepl.JEPLPersistAction
+import jepl.JEPLResultSetDALListener
+import jepl.JEPLResultSetDAO
+import jepl.JEPLPreparedStatement
+import jepl.JEPLPreparedStatementListener
 import jepl.groovy.dsl.DSLDAL
 import jepl.groovy.dsl.DSLDAO
 
@@ -100,28 +104,83 @@ class ContactDAO
         dao.addJEPLListener resultSetListener                 
     }
     
+    def getDSLDAO()
+    {
+        return dslDAO
+    }
+        
     def insert(Contact contact)
     {        
         int key = dslDAO.query
         {
             code "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)"    
             params contact.email,contact.name,contact.phone    
-            generatedKey(int.class)
+            getGeneratedKey(int.class)
         }         
         contact.id = key       
-    }     	
+    }     	                    
     
     def insertImplicitUpdateListener(Contact contact)
     {
         int key = dslDAO.insert(contact)
         {    
-            generatedKey(int.class)
+            getGeneratedKey(int.class)
         }         
         contact.id = key          
     }        
     
+    def insertExplicitResultSetListener(contact)
+    {
+        // Just to show how data conversion can be possible if required
+        
+        def resListener = 
+            [ 
+                setupJEPLResultSet : { JEPLResultSet jrs,JEPLTask<?> task -> 
+                },
+                getValue : { int columnIndex, Class returnType, JEPLResultSet jrs -> 
+                    if (!returnType.equals(int.class)) throw new RuntimeException("UNEXPECTED")
+                    // Expected columnIndex = 1 (only one row and one column is expected)
+                    def rs = jrs.getResultSet()
+                    def resInt = rs.getInt(columnIndex)
+                    def resObj = rs.getObject(columnIndex)
+                    def resIntObj = (Integer)jrs.getJEPLStatement().getJEPLDAL().cast(resObj, returnType)
+                    if (resInt != resIntObj) throw new RuntimeException("UNEXPECTED")
+                    return resIntObj
+                }
+            ] as JEPLResultSetDALListener
+
+        int key = dslDAO.query
+        {
+            code "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?, ?, ?)"    
+            params contact.email,contact.name,contact.phone    
+            listener resListener
+            // You can add here more JEPLListener listeners just adding: listener otherListener
+            getGeneratedKey(int.class)
+        }         
+        contact.id = key            
+    }            
+         
+    def insertUsingNamedParams(contact)
+    {
+        int key = dslDAO.query
+        {
+            code "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (:email,:name,:phone)"    
+            params email:contact.email,name:contact.name,phone:contact.phone    
+            getGeneratedKey(int.class)
+        }         
+        contact.id = key        
+    }     
     
-   
+    def insertUsingNumberedParams(contact)
+    {
+        int key = dslDAO.query
+        {
+            code "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?1,?2,?3)"    
+            params 1:contact.email,2:contact.name,3:contact.phone    
+            getGeneratedKey(int.class)
+        }         
+        contact.id = key        
+    }         
     
     def update(Contact contact)
     {
@@ -134,5 +193,182 @@ class ContactDAO
 
         return updated > 0         
     }        
+    
+    def updateImplicitUpdateListener(contact)
+    {
+        def updated = dslDAO.update(contact)
+        {    
+            executeUpdate()
+        }         
+        return updated > 0       
+    }           
+    
+    def delete(contact)
+    {
+        return deleteById(contact.id)
+    }
+    
+    def deleteById(id)
+    {
+        def deleted = dslDAO.query
+        {
+            code "DELETE FROM CONTACT WHERE ID = ?"   
+            params id    
+            executeUpdate()
+        }          
+        return deleted > 0
+    }    
+    
+    def deleteImplicitUpdateListener(contact)
+    {
+        def deleted = dslDAO.delete(contact)
+        {    
+            executeUpdate()
+        }         
+        return deleted > 0        
+    }    
+    
+    def deleteAll()
+    {
+        def deleted = dslDAO.query
+        {
+            code "DELETE FROM CONTACT"   
+            executeUpdate()
+        }          
+        return deleted > 0               
+    }        
+    
+    def selectActiveResult() // JEPLResultSetDAO<Contact>
+    {
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT"   
+            getJEPLResultSetDAO()
+        }  
+        return result
+    }                 
+    
+    def static toContactArray(JEPLResultSetDAO list) // Contact[]
+    {
+        if (list.isClosed()) throw new RuntimeException("Unexpected")
+        def size = list.size()
+        def res = list.toArray(new Contact[size]) // JEPLResultSetDAO implements List interface
+        if (!list.isClosed()) throw new RuntimeException("Unexpected")
+        return res
+    }          
+    
+    def selectNotActiveResult() // List<Contact>
+    {
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT ORDER BY ID"   
+            getResultList()
+        }  
+        return result        
+    }        
+    
+    def selectNotActiveResult(maxNumResults) // List<Contact>
+    {
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT ORDER BY ID"   
+            maxResults maxNumResults
+            getResultList()
+        }  
+        return result
+    }       
+    
+    def selectNotActiveResult2(maxNumResults)
+    {
+        // Another (verbose) approach using JDBC        
+        def stmtListener = { JEPLPreparedStatement jstmt,JEPLTask<List<Contact>> task ->  // setupJEPLPreparedStatement(JEPLPreparedStatement jstmt,JEPLTask<List<Contact>> task) throws Exception
+                def stmt = jstmt.getPreparedStatement()
+                def old = stmt.getMaxRows()
+                stmt.setMaxRows(maxNumResults)
+                try
+                {
+                    List<Contact> res = task.exec()
+                }
+                finally
+                {
+                    stmt.setMaxRows(old) // Restore
+                }                        
+                        
+        } as JEPLPreparedStatementListener<List<Contact>>;
+
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT"  
+            listener stmtListener
+            maxResults maxNumResults
+            getResultList()
+        }  
+        return result        
+    }    
+
+    def selectCount()  // selectCount method name is used instead "count" to avoid name clashing with jooq "org.jooq.impl.DSL.count()"
+    {
+        def count = dslDAO.query
+        {
+            code "SELECT COUNT(*) FROM CONTACT"   
+            getOneRowFromSingleField(int.class)
+        }  
+        return count            
+    }    
+    
+    def selectRange(from,to) // List<Contact>
+    {
+        // The simplest form
+        
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT ORDER BY ID"  
+            firstResult from
+            maxResults  (to - from)
+            getResultList()
+        }  
+        return result        
+    }    
+    
+    def selectRange2(from,to) // List<Contact>
+    {
+        // Another (verbose) approach using JDBC
+        def resListener = 
+        [
+            setupJEPLResultSet: { JEPLResultSet jrs,JEPLTask<?> task -> 
+                resultSetListener.setupJEPLResultSet(jrs, task)
+                
+                def rs = jrs.getResultSet()
+                rs.absolute(from) // Is not still closed
+
+                // Not needed, just to know the state of ResultSet and some demostrative check:
+                def res = task.exec() // List<Contact>
+                if (res.size() > to - from) throw new RuntimeException("Unexpected")            
+            }, 
+            createObject: { JEPLResultSet jrs ->
+                resultSetListener.createObject(jrs)
+            },
+            fillObject : { Contact obj,JEPLResultSet jrs ->
+                resultSetListener.fillObject(obj, jrs)
+                
+                def rs = jrs.getResultSet()
+                def row = rs.getRow() 
+                if (row + 1 == to)
+                    jrs.stop()                
+            }                     
+               
+        ] as JEPLResultSetDAOListener<Contact>
+        
+
+        def result = dslDAO.query
+        {
+            code "SELECT * FROM CONTACT ORDER BY ID"  
+            listener resListener
+            getResultList()
+        }  
+        return result         
+    }    
+    
+    
 }
 

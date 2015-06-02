@@ -131,8 +131,8 @@ class ContactDAO
                     .addParameters( contact.email,contact.name,contact.phone )
                     .getGeneratedKey(int.class)
         contact.id = key
-    }     
-    
+    }          
+                
     def insertImplicitUpdateListener(contact)
     {
         def key = dao.insert(contact).getGeneratedKey(int.class)
@@ -258,7 +258,7 @@ class ContactDAO
                     stmt.setMaxRows(old) // Restore
                 }                        
                         
-        } as JEPLPreparedStatementListener<List<Contact>>;    
+        } as JEPLPreparedStatementListener<List<Contact>>;   
 
         return dao.createJEPLDAOQuery(jooqCtx.selectFrom(table("CONTACT")).getSQL())
                 .addJEPLListener(listener)
@@ -280,7 +280,7 @@ class ContactDAO
                 .getResultList()
     }    
     
-    public def selectRange2(from,to) // List<Contact>
+    def selectRange2(from,to) // List<Contact>
     {
         // Another (verbose) approach using JDBC
         def listener = 
