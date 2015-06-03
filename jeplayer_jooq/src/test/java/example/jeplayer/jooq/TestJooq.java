@@ -113,6 +113,19 @@ public class TestJooq
             contact3.setEmail("contactAndOther@world.com");            
             dao.insertExplicitResultSetListener(contact3); // just to play           
                         
+            Contact contact4 = new Contact();            
+            contact4.setName("One more Contact");
+            contact4.setPhone("4444444");
+            contact4.setEmail("oneMoreContact@world.com");
+            dao.insertUsingNamedParams(contact4); // just to play            
+                        
+            Contact contact5 = new Contact();            
+            contact5.setName("No more Contact");
+            contact5.setPhone("5555555");
+            contact5.setEmail("noMoreContact@world.com");
+            dao.insertUsingNumberedParams(contact5); // just to play
+            
+            
             contact3.setPhone("4444444");            
             boolean updated = dao.update(contact3);
             assertTrue(updated);            
@@ -179,9 +192,9 @@ public class TestJooq
             
             JEPLDAL dal = jds.createJEPLDAL();
             
-            dalActiveSelect(dal,jooqCtx);
+            dalActiveSelect(dal,jooqCtx,5);
             
-            dalNotActiveSelect(dal,jooqCtx);
+            dalNotActiveSelect(dal,jooqCtx,5);
             
             jdbcTxnExample(dao);            
          
@@ -261,7 +274,7 @@ public class TestJooq
     }
            
     
-    public static void dalActiveSelect(final JEPLDAL dal,DefaultDSLContext jooqCtx)
+    public static void dalActiveSelect(final JEPLDAL dal,DefaultDSLContext jooqCtx,int countExpected)
     {          
         // Supposed 3 rows in contact table
         JEPLTask<Void> task = () -> { // public Void exec() throws Exception
@@ -291,9 +304,9 @@ public class TestJooq
             assertTrue(rs.getRow() == 1);
 
             int count = rs.getInt(1);
-            assertTrue(count == 3);       
+            assertTrue(count == countExpected);       
             count = rs.getInt("CO");
-            assertTrue(count == 3);
+            assertTrue(count == countExpected);
 
             float avg = rs.getFloat(1);
             assertTrue(avg > 0);        
@@ -309,7 +322,7 @@ public class TestJooq
         dal.getJEPLDataSource().exec(task);
     }        
     
-    public static void dalNotActiveSelect(final JEPLDAL dal,DefaultDSLContext jooqCtx)
+    public static void dalNotActiveSelect(final JEPLDAL dal,DefaultDSLContext jooqCtx,int countExpected)
     {          
         // Supposed 3 rows in contact table
         JEPLCachedResultSet resSet = dal.createJEPLDALQuery(
@@ -323,9 +336,9 @@ public class TestJooq
         assertTrue(resSet.size() == 1);
 
         int count = resSet.getValue(1, 1, int.class); // Row 1, column 1
-        assertTrue(count == 3);
+        assertTrue(count == countExpected);
         count = resSet.getValue(1, "CO", int.class);
-        assertTrue(count == 3);
+        assertTrue(count == countExpected);
 
         float avg = resSet.getValue(1, 2, float.class); // Row 1, column 2
         assertTrue(avg > 0);

@@ -85,7 +85,20 @@ class GroovyJooqExample
             contact3.phone = "3333333"
             contact3.email = "contactAndOther@world.com"
             dao.insertExplicitResultSetListener(contact3) // just to play           
+                   
+            def contact4 = new Contact()            
+            contact4.name = "One more Contact"
+            contact4.phone = "4444444"
+            contact4.email = "oneMoreContact@world.com"
+            dao.insertUsingNamedParams(contact4) // just to play            
                         
+            def contact5 = new Contact()            
+            contact5.name = "No more Contact"
+            contact5.phone = "5555555"
+            contact5.email = "noMoreContact@world.com"
+            dao.insertUsingNumberedParams(contact5) // just to play            
+            
+            
             contact3.phone = "4444444"
             def updated = dao.update(contact3)
             assertTrue(updated)            
@@ -142,9 +155,9 @@ class GroovyJooqExample
             
             def dal = jds.createJEPLDAL()
             
-            dalActiveSelect(dal,jooqCtx)
+            dalActiveSelect(dal,jooqCtx,5)
             
-            dalNotActiveSelect(dal,jooqCtx)
+            dalNotActiveSelect(dal,jooqCtx,5)
             
             jdbcTxnExample(dao)            
          
@@ -212,7 +225,7 @@ class GroovyJooqExample
     }
            
  
-    def dalActiveSelect(JEPLDAL dal,DefaultDSLContext jooqCtx)
+    def dalActiveSelect(JEPLDAL dal,DefaultDSLContext jooqCtx,countExpected)
     {          
         // Supposed 3 rows in contact table
         def task = {   // Void exec() throws Exception
@@ -242,9 +255,9 @@ class GroovyJooqExample
             assertTrue(rs.getRow() == 1)
 
             int count = rs.getInt(1)
-            assertTrue(count == 3)       
+            assertTrue(count == countExpected)       
             count = rs.getInt("CO")
-            assertTrue(count == 3)
+            assertTrue(count == countExpected)
 
             float avg = rs.getFloat(1)
             assertTrue(avg > 0)        
@@ -262,7 +275,7 @@ class GroovyJooqExample
         dal.getJEPLDataSource().exec(task)
     }        
     
-    def dalNotActiveSelect(JEPLDAL dal,DefaultDSLContext jooqCtx)
+    def dalNotActiveSelect(JEPLDAL dal,DefaultDSLContext jooqCtx,countExpected)
     {          
         // Supposed 3 rows in contact table
         def resSet = dal.createJEPLDALQuery(
@@ -276,9 +289,9 @@ class GroovyJooqExample
         assertTrue(resSet.size() == 1)
 
         def count = resSet.getValue(1, 1, int.class) // Row 1, column 1
-        assertTrue(count == 3)
+        assertTrue(count == countExpected)
         count = resSet.getValue(1, "CO", int.class)
-        assertTrue(count == 3)
+        assertTrue(count == countExpected)
 
         def avg = resSet.getValue(1, 2, float.class) // Row 1, column 2
         assertTrue(avg > 0)

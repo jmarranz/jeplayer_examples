@@ -181,6 +181,26 @@ public class ContactDAO
          contact.setId(key);
     }    
     
+    public void insertUsingNamedParams(Contact contact)
+    {
+        int key = dao.createJEPLDALQuery( "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (:email,:name,:phone)" )                 
+                        .setParameter("email",contact.getEmail())
+                        .setParameter("name",contact.getName())
+                        .setParameter("phone",contact.getPhone())
+                        .getGeneratedKey(int.class);
+         contact.setId(key);
+    }     
+    
+    public void insertUsingNumberedParams(Contact contact)
+    {
+        int key = dao.createJEPLDALQuery( "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?1,?2,?3)" )                 
+                        .setParameter(1,contact.getEmail())
+                        .setParameter(2,contact.getName())
+                        .setParameter(3,contact.getPhone())
+                        .getGeneratedKey(int.class);
+         contact.setId(key);             
+    }    
+    
     public boolean update(Contact contact)
     {
         int updated = dao.createJEPLDALQuery(

@@ -167,6 +167,26 @@ class ContactDAO
          contact.id = key
     }    
     
+    def insertUsingNamedParams(contact)
+    {
+        def key = dao.createJEPLDALQuery( "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (:email,:name,:phone)" )                 
+                        .setParameter("email",contact.email)
+                        .setParameter("name",contact.name)
+                        .setParameter("phone",contact.phone)
+                        .getGeneratedKey(int.class)
+         contact.id = key           
+    }     
+    
+    def insertUsingNumberedParams(contact)
+    {
+        def key = dao.createJEPLDALQuery( "INSERT INTO CONTACT (EMAIL, NAME, PHONE) VALUES (?1,?2,?3)" )                 
+                        .setParameter(1,contact.email)
+                        .setParameter(2,contact.name)
+                        .setParameter(3,contact.phone)
+                        .getGeneratedKey(int.class)
+         contact.id = key              
+    }                    
+                    
     def update(contact)
     {
         def updated = dao.createJEPLDALQuery(
