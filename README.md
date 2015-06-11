@@ -1,6 +1,6 @@
 JEPLayer Examples
 ========
-Java Examples using [JEPLayer ORM](https://github.com/jmarranz/jeplayer)
+Java and Groovy Examples using [JEPLayer ORM](https://github.com/jmarranz/jeplayer)
 
 Examples included: 
 
