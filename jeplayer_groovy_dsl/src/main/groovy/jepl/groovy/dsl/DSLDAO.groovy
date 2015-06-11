@@ -60,6 +60,7 @@ class DSLDAO extends DSLDAL
         
     }
     
+    @Override
     def Object query(Closure userClosure)
     {      
         def closures = new DSLDAOQueryPublicClosures()

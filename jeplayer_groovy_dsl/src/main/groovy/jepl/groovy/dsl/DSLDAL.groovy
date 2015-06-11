@@ -11,7 +11,7 @@ import jepl.impl.groovy.dsl.DSLDALQueryResults
 
 class DSLDAL
 {
-    JEPLDAL dal
+    protected final JEPLDAL dal
     
     def DSLDAL(JEPLDAL dal)
     {

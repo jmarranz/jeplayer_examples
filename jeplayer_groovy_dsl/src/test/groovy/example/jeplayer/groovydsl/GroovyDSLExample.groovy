@@ -58,8 +58,8 @@ class GroovyDSLExample
             jds.addJEPLListener(conListener) // Simple alternative:  jds.setDefaultAutoCommit(true)
          
             def dal = jds.createJEPLDAL() 
-            def dslDAL = new DSLDAL(dal) 
-             
+            def dslDAL = new DSLDAL(dal)
+         
             createTables(dslDAL)
                 
             def dao = new ContactDAO(jds,mappingMode)
