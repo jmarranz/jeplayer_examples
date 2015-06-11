@@ -272,7 +272,7 @@ class ContactDAO
         def result = dslDAO.query
         {
             code "SELECT * FROM CONTACT ORDER BY ID"   
-            maxResults maxNumResults
+            maxResults maxNumResults // firstResult,strictMaxRows,strictMinRows are also valid here
             getResultList()
         }  
         return result
@@ -300,7 +300,7 @@ class ContactDAO
         {
             code "SELECT * FROM CONTACT"  
             listener stmtListener
-            maxResults maxNumResults
+            limits { maxResults maxNumResults }  // Alternative to group firstResult,maxResults,strictMaxRows,strictMinRows below limits { ... }             
             getResultList()
         }  
         return result        
@@ -322,9 +322,11 @@ class ContactDAO
         
         def result = dslDAO.query
         {
-            code "SELECT * FROM CONTACT ORDER BY ID"  
-            firstResult from
-            maxResults  (to - from)
+            code "SELECT * FROM CONTACT ORDER BY ID"              
+            limits { 
+                firstResult from
+                maxResults  (to - from) 
+            }
             getResultList()
         }  
         return result        

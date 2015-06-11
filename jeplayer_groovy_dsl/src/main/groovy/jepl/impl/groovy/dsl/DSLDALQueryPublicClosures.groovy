@@ -10,10 +10,13 @@ class DSLDALQueryPublicClosures
     Closure code
     Closure params
     Closure listener
+    
     Closure firstResult    
     Closure maxResults
     Closure strictMaxRows    
     Closure strictMinRows     
+    
+    Closure limits
     
     Closure getGeneratedKey
     Closure executeUpdate

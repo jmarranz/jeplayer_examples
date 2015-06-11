@@ -5,6 +5,7 @@ import jepl.JEPLDAL
 import jepl.JEPLDALQuery
 import jepl.JEPLListener
 import jepl.JEPLResultSetDAO
+import jepl.impl.groovy.dsl.DSLDALLimitsPublicClosures
 import jepl.impl.groovy.dsl.DSLDALQueryPublicClosures
 import jepl.impl.groovy.dsl.DSLDALQueryResults
 
@@ -33,10 +34,20 @@ class DSLDAL
                 results.params = params 
         }
         Closure addListenerMethod = { JEPLListener listener -> results.addListener(listener) }    
+        
         Closure firstResultMethod = { int firstResult -> results.firstResult = firstResult }
-        Closure maxResultsMethod = { int maxResults -> results.maxResults = maxResults }        
+        Closure maxResultsMethod = { int maxResults -> 
+            results.maxResults = maxResults }        
         Closure strictMaxRowsMethod = { int strictMaxRows -> results.strictMaxRows = strictMaxRows }
-        Closure strictMinRowsMethod = { int strictMinRows -> results.strictMinRows = strictMinRows }        
+        Closure strictMinRowsMethod = { int strictMinRows -> results.strictMinRows = strictMinRows }             
+        
+        // Alternativa para firstResult,maxResults,strictMaxRows,strictMinRows, se pueden poner bajo un limits { } además del primer nivel
+        def limitClosures = new DSLDALLimitsPublicClosures(firstResult:firstResultMethod,maxResults:maxResultsMethod,strictMaxRows:strictMaxRowsMethod,strictMinRows:strictMinRowsMethod)
+        Closure limitsMethod = 
+            { Closure limitsUserClosure ->  
+                limitsUserClosure.delegate = limitClosures
+                limitsUserClosure.call()
+            }
         
         Closure getGeneratedKeyMethod = { Class generatedKeyClass -> results.generatedKeyClass = generatedKeyClass }
         Closure executeUpdateMethod = { results.executeUpdate = true }                 
@@ -47,10 +58,14 @@ class DSLDAL
         closures.code = codeMethod
         closures.params = paramsMethod
         closures.listener = addListenerMethod
+        
         closures.firstResult = firstResultMethod        
         closures.maxResults = maxResultsMethod
         closures.strictMaxRows = strictMaxRowsMethod        
         closures.strictMinRows = strictMinRowsMethod        
+        
+        closures.limits = limitsMethod;
+        
         closures.getGeneratedKey = getGeneratedKeyMethod
         closures.executeUpdate = executeUpdateMethod
         closures.getOneRowFromSingleField = getOneRowFromSingleFieldMethod  
